@@ -1338,10 +1338,14 @@ function renderTodayLbls(){
 // ===== RECEIVE: RESET & STEP 2 =====
 function resetRecv(){
   curRecvParsed=null;
-  const i=document.getElementById('recv-lbl');if(i){i.value='';i.focus();}
+  const i=document.getElementById('recv-lbl');if(i)i.value='';
   const p=document.getElementById('recv-parsed');if(p)p.classList.add('hidden');
   document.getElementById('recv-s1').classList.remove('hidden');document.getElementById('recv-s2').classList.add('hidden');
   stps(['sr1','sr2','sr3'],1);hal('recv-alert');
+  // QUAN TRỌNG: chỉ focus() SAU KHI đã hiện lại khung chứa ô quét tem (bỏ class "hidden" ở trên).
+  // Trước đây focus() bị gọi trước khi unhide → focus vào phần tử đang display:none nên KHÔNG có tác dụng,
+  // khiến súng scan không gõ được vào ô nữa, bắt buộc phải kích chuột thủ công mới quét tiếp được.
+  setTimeout(()=>{const el=document.getElementById('recv-lbl');if(el)el.focus();},30);
 }
 // Chống lỗi "nhảy đúp dòng": súng scan thường gửi ký tự xong rồi gửi thêm phím Enter.
 // Nếu để cả oninput (debounce) và onkeydown(Enter) cùng gọi hàm lưu độc lập → 1 lần bắn có thể lưu 2 lần → ra 2 dòng.
