@@ -361,10 +361,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
         </div>
         <div id="recv-s2" class="hidden">
           <div id="recv-info" class="alert ai" style="margin-bottom:9px;font-size:11px;"></div>
-          <div class="scanbox"><input type="text" id="recv-loc" placeholder="📷 Scan vị trí kho (VD: A-01-02)..." oninput="recvLocInput(this)" onkeydown="if(event.key==='Enter')recvStep2()"><p>Quét vị trí → tự lưu ngay</p></div>
+          <div class="scanbox"><input type="text" id="recv-loc" placeholder="📷 Scan vị trí kho (VD: A-01-02)..." oninput="recvLocInput(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();clearTimeout(scT['recv-loc']);guardedSave('recv-loc',recvStep2);}"><p>Quét vị trí → tự lưu ngay</p></div>
           <div style="display:flex;gap:7px;margin-top:6px;">
             <button class="btn btn-o btn-sm" onclick="resetRecv()">← Quay lại</button>
-            <button class="btn btn-p btn-sm" style="flex:1" onclick="recvStep2()">✓ Xác nhận thủ công</button>
+            <button class="btn btn-p btn-sm" style="flex:1" onclick="clearTimeout(scT['recv-loc']);guardedSave('recv-loc',recvStep2)">✓ Xác nhận thủ công</button>
           </div>
         </div>
         <div id="recv-alert" class="alert hidden" style="margin-top:8px;"></div>
@@ -403,10 +403,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
         </div>
         <div id="mv-s2" class="hidden">
           <div id="mv-info" class="alert ai" style="margin-bottom:9px;"></div>
-          <div class="scanbox"><input type="text" id="mv-loc" placeholder="📷 Scan vị trí mới → tự lưu ngay..." oninput="mvLocInput(this)" onkeydown="if(event.key===&#39;Enter&#39;)mvSave()"><p>Bắn vị trí → tự lưu | Enter cũng lưu</p></div>
+          <div class="scanbox"><input type="text" id="mv-loc" placeholder="📷 Scan vị trí mới → tự lưu ngay..." oninput="mvLocInput(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();clearTimeout(window._mvT);guardedSave('mv-loc',mvSave);}"><p>Bắn vị trí → tự lưu | Enter cũng lưu</p></div>
           <div style="display:flex;gap:7px;margin-top:6px;">
             <button class="btn btn-o btn-sm" onclick="resetMv()">← Quay lại</button>
-            <button class="btn btn-p btn-sm" style="flex:1" onclick="mvSave()">✓ Lưu thủ công</button>
+            <button class="btn btn-p btn-sm" style="flex:1" onclick="clearTimeout(window._mvT);guardedSave('mv-loc',mvSave)">✓ Lưu thủ công</button>
           </div>
         </div>
         <div id="mv-alert" class="alert hidden" style="margin-top:8px;"></div>
@@ -665,7 +665,7 @@ Vít M6x20mm" style="height:60px;background:#fff;"></textarea>
           </div>
           <div id="st-step2" class="hidden">
             <div id="st-info" class="alert ai" style="margin-bottom:8px;font-size:11px;"></div>
-            <div class="scanbox"><input type="text" id="st-loc" placeholder="📷 Bắn vị trí kho → tự lưu..." oninput="stLocAutoTrig(this)" onkeydown="if(event.key===&#39;Enter&#39;)stConfirm()"><p>Bắn vị trí → tự ghi vào danh sách | Enter lưu</p></div>
+            <div class="scanbox"><input type="text" id="st-loc" placeholder="📷 Bắn vị trí kho → tự lưu..." oninput="stLocAutoTrig(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();clearTimeout(stScT['loc']);guardedSave('st-loc',stConfirm);}"><p>Bắn vị trí → tự ghi vào danh sách | Enter lưu</p></div>
             <button class="btn btn-o btn-sm" onclick="stReset()" style="width:100%;margin-top:5px;">✕ Hủy — quét lại tem</button>
           </div>
           <div id="st-alert" class="alert hidden" style="margin-top:8px;"></div>
@@ -768,11 +768,24 @@ Vít M6x20mm" style="height:60px;background:#fff;"></textarea>
           </div>
           <div id="bk-alert" class="alert as" style="margin-top:8px;">✅ Đã xóa.</div>
         </div>
+        <div class="card">
+          <div class="ch"><span class="ct">🧹 Dọn dẹp tem trùng do lỗi hệ thống cũ</span></div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Bản cập nhật này đã sửa lỗi 1 lần bắn tạo ra 2 dòng giống hệt nhau (cùng mã tem, cùng vị trí). Dữ liệu bắn <strong>TRƯỚC</strong> khi cập nhật có thể vẫn còn tồn đọng các dòng trùng do lỗi cũ để lại — công cụ này giúp quét và gộp lại các dòng đó thành 1 dòng duy nhất (cộng dồn số lượng), KHÔNG ảnh hưởng tới các tem trùng hợp lệ (cùng mã tem nhưng khác vị trí — loại này vẫn được giữ nguyên là 2 dòng riêng vì đó là chủ đích).</p>
+          <button class="btn btn-w" style="width:100%" onclick="scanDupCleanup()">🔍 Quét tem trùng do lỗi cũ</button>
+          <div id="dupclean-result" style="margin-top:10px;"></div>
+        </div>
       </div>
     </div>
   </div>
 
   </div>
+</div>
+
+<!-- Modal: Dọn dẹp tem trùng do lỗi hệ thống cũ -->
+<div class="mo hidden" id="mo-dupclean">
+  <div class="md md-lg"><div class="mh"><h3>🧹 Xác nhận gộp tem trùng do lỗi cũ</h3><button class="xb" onclick="closeMo('mo-dupclean')">✕</button></div>
+  <div class="mb" id="dupclean-body"></div>
+  <div class="mf"><button class="btn btn-o" onclick="closeMo('mo-dupclean')">Hủy</button><button class="btn btn-w" onclick="confirmDupCleanup()">✅ Gộp tất cả các nhóm trên</button></div></div>
 </div>
 
 <!-- MODALS -->
@@ -915,6 +928,7 @@ function startSync(){
       if(Array.isArray(fbTxns))LS.s(KS.T,fbTxns);
       if(Array.isArray(fbCatalog))LS.s(KS.C,fbCatalog);
       if(Array.isArray(fbStocktakes))LS.s(KS.S,fbStocktakes);
+      migrateLabelUids(); // đảm bảo dữ liệu tải từ Firebase cũng có uid cho từng dòng
       // Render lại trang hiện tại
       refreshCurrentPage();
     } else {
@@ -947,6 +961,7 @@ function attachRealtimeListeners(){
     const fbStr=JSON.stringify(d);
     if(localStr===fbStr)return;
     LS.s(KS.L,d);
+    migrateLabelUids();
     if(curPage==='inventory'){renderInv();if(curInvView==='summary')renderInvSummary();}
     if(curPage==='dashboard')renderDash();
     if(curPage==='receive')renderRecvToday();
@@ -1009,6 +1024,17 @@ function autoFb(){
 
 // ===== UTILS =====
 function genId(){return'TEM-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).substr(2,4).toUpperCase();}
+function genUid(){return'ROW-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).substr(2,6).toUpperCase();}
+// ===== DI TRÚ DỮ LIỆU CŨ: đảm bảo MỖI DÒNG tồn kho có 1 "uid" (khoá nội bộ duy nhất) =====
+// Trước đây "id" (mã tem/QR) vừa là khoá định danh vừa dùng để thao tác 1 dòng cụ thể.
+// Từ bản này: "id" = mã tem/QR (CÓ THỂ lặp lại ở nhiều dòng nếu tem được bắn nhập ở nhiều vị trí khác nhau — hợp lệ).
+//             "uid" = khoá nội bộ, LUÔN LUÔN duy nhất cho từng dòng, dùng để sửa/xoá/xem chi tiết/di chuyển/xuất đúng dòng.
+function migrateLabelUids(){
+  const L=DB.gL();
+  let changed=false;
+  L.forEach(l=>{ if(!l.uid){ l.uid=genUid(); changed=true; } });
+  if(changed) DB.sL(L);
+}
 function genTid(){return'TXN-'+Date.now().toString(36).toUpperCase();}
 function genSid(){return'KK-'+Date.now().toString(36).toUpperCase();}
 function now(){return new Date().toLocaleString('vi-VN');}
@@ -1215,10 +1241,12 @@ function recvStep1(){
   if(!parsed){sal('recv-alert','ad','❌ Không nhận diện được chuỗi QR. Kiểm tra lại định dạng tem.');return;}
   if(parsed.qty<=0){sal('recv-alert','ad','❌ Số lượng trên tem không hợp lệ (qty=0). Kiểm tra lại.');return;}
 
-  // Kiểm tra đã nhập kho chưa (dùng raw làm ID) — CHO PHÉP quét trùng, chỉ cảnh báo, vẫn tiếp tục nhập bình thường
+  // Kiểm tra đã nhập kho chưa (dùng raw làm mã tem) — CHO PHÉP tem trùng, nhưng CHỈ khi nhập ở VỊ TRÍ KHÁC vị trí đã có.
+  // Lấy TẤT CẢ các dòng đang có cùng mã tem này (có thể đã tồn tại ở nhiều vị trí khác nhau từ trước).
   const L=DB.gL();
-  const existing=L.find(l=>l.id===parsed.raw);
-  const isDup=!!existing;
+  const dupRows=L.filter(l=>l.id===parsed.raw);
+  const isDup=dupRows.length>0;
+  const existing=dupRows[0];
 
   // Tìm mã Bravo từ danh mục theo tên SP
   const cat=DB.gC().find(c=>c.productName.toLowerCase()===parsed.productName.toLowerCase()||c.bravoCode.toLowerCase()===parsed.productName.toLowerCase());
@@ -1226,8 +1254,10 @@ function recvStep1(){
   const unit=isDup?existing.unit:(cat?cat.unit:'Cái');
   curRecvParsed={...parsed,bravoCode,unit,cat,isDup};
 
-  if(isDup){sal('recv-alert','aw','⚠️ Tem này đã có trong hệ thống (vị trí trước: '+(existing.location||'—')+', tồn hiện tại: '+existing.remaining+' '+existing.unit+'). Không tạo tem mới — số lượng quét lần này sẽ được CỘNG DỒN vào đúng tem này.');}
-  else hal('recv-alert');
+  if(isDup){
+    const locList=dupRows.map(l=>'📍 '+(l.location||'—')+' (tồn '+l.remaining+' '+l.unit+')').join('  ,  ');
+    sal('recv-alert','aw','⚠️ Tem này đã có trong hệ thống tại: '+locList+'. Quét vào ĐÚNG vị trí cũ → sẽ CỘNG DỒN vào đúng dòng đó. Quét vào vị trí KHÁC → hệ thống sẽ tạo 1 DÒNG MỚI riêng (không đè lên vị trí cũ), đánh dấu "Tem trùng".');
+  } else hal('recv-alert');
   document.getElementById('recv-s1').classList.add('hidden');
   document.getElementById('recv-s2').classList.remove('hidden');
   document.getElementById('recv-info').innerHTML=`📦 <strong>${parsed.productName}</strong> — Bravo: <strong>${bravoCode}</strong> | SL: <strong>${parsed.qty} ${unit}</strong> | Ver: <strong>${parsed.version||'—'}</strong>${isDup?' <span class="badge gw" style="margin-left:4px;">⚠️ Trùng tem</span>':''}`;
@@ -1274,6 +1304,7 @@ ${isA5?`<div class="ql-partial"><div class="ql-pt">📝 Ghi số lượng còn l
 function saveLbl(){
   if(!curLbl){sal('lbl-alert','aw','Chưa tạo tem!');return;}
   const L=DB.gL();if(L.find(l=>l.id===curLbl.id)){sal('lbl-alert','aw','Tem đã lưu!');return;}
+  if(!curLbl.uid)curLbl.uid=genUid();
   L.push(curLbl);DB.sL(L);renderTodayLbls();sal('lbl-alert','as','💾 Đã lưu tem!');
 }
 function clearLbl(){
@@ -1312,11 +1343,21 @@ function resetRecv(){
   document.getElementById('recv-s1').classList.remove('hidden');document.getElementById('recv-s2').classList.add('hidden');
   stps(['sr1','sr2','sr3'],1);hal('recv-alert');
 }
+// Chống lỗi "nhảy đúp dòng": súng scan thường gửi ký tự xong rồi gửi thêm phím Enter.
+// Nếu để cả oninput (debounce) và onkeydown(Enter) cùng gọi hàm lưu độc lập → 1 lần bắn có thể lưu 2 lần → ra 2 dòng.
+// guardedSave() khoá lại theo "key" trong 1 khoảng ngắn để dù cả 2 đường cùng kích hoạt cũng chỉ chạy đúng 1 lần.
+const _saveLocks={};
+function guardedSave(key,fn){
+  if(_saveLocks[key])return; // đang xử lý dở dang do lần gọi trước — bỏ qua lần gọi trùng này
+  _saveLocks[key]=true;
+  try{ fn(); } finally { setTimeout(()=>{_saveLocks[key]=false;},700); }
+}
 function recvLocInput(el){
   // Tự động lưu khi scan xong vị trí (kết thúc bằng Enter từ súng scan, hoặc đủ độ dài hợp lệ)
+  clearTimeout(scT['recv-loc']);
   const v=el.value;
-  if(v.length>=4&&v.endsWith('\n'))recvStep2();
-  else if(v.length===9)recvStep2();
+  if(v.length>=4&&v.endsWith('\n')){scT['recv-loc']=setTimeout(()=>guardedSave('recv-loc',recvStep2),10);}
+  else if(v.length===9){scT['recv-loc']=setTimeout(()=>guardedSave('recv-loc',recvStep2),10);}
 }
 function recvStep2(){
   if(!curRecvParsed){sal('recv-alert','aw','Chưa quét tem!');return;}
@@ -1328,47 +1369,78 @@ function recvStep2(){
   const warehouse=p.cat?p.cat.group||'':'';
 
   // Mã tem = chuỗi QR raw (để quét xuất tìm lại được)
-  // KHÔNG được tạo tem mới khi trùng (app không in được tem, tem vật lý là duy nhất).
-  // Nếu ID đã tồn tại trong hệ thống -> cộng dồn số lượng vào ĐÚNG tem đó, ghi chú lại lần quét trùng.
+  // QUY TẮC MỚI: cho phép 1 mã tem tồn tại ở NHIỀU vị trí khác nhau (2 lần bắn, 2 vị trí khác nhau là hợp lệ).
+  //  - Nếu quét vào ĐÚNG vị trí đã có sẵn của mã tem này → cộng dồn số lượng vào đúng dòng đó (không tạo dòng mới).
+  //  - Nếu quét vào vị trí KHÁC với tất cả các vị trí đã có → KHÔNG đè lên dòng cũ, tạo 1 DÒNG MỚI riêng biệt,
+  //    có ghi chú rõ "Tem trùng" ở cột ghi chú, để phân biệt với lỗi hệ thống nhảy đúp dòng ngoài ý muốn.
   const L=DB.gL();
   const id=p.raw;
-  const isDup=!!p.isDup;
+  const dupRows=L.filter(l=>l.id===id);
+  const sameLocRow=dupRows.find(l=>(l.location||'')===loc);
   let unitOut=unit;
+  const isMergeSameLoc=!!sameLocRow;
+  const isNewLocDup=!sameLocRow&&dupRows.length>0;
 
-  if(isDup){
-    const idx=L.findIndex(l=>l.id===id);
+  if(isMergeSameLoc){
+    // Cùng tem, CÙNG vị trí đã có sẵn -> cộng dồn số lượng vào đúng dòng đó
+    const idx=L.findIndex(l=>l.uid===sameLocRow.uid);
     const ex=L[idx];
     const dt=now();
     ex.qty=(ex.qty||0)+p.qty;
     ex.remaining=(ex.remaining||0)+p.qty;
     ex.status='ACTIVE';
-    ex.location=loc; // cập nhật về vị trí quét gần nhất
     ex.dupScanCount=(ex.dupScanCount||0)+1;
-    ex.note='⚠️ Quét trùng x'+ex.dupScanCount+' — lần gần nhất: +'+p.qty+' '+ex.unit+' lúc '+dt+' tại 📍 '+loc;
+    ex.note='⚠️ Quét lại cùng vị trí x'+ex.dupScanCount+' — cộng dồn +'+p.qty+' '+ex.unit+' lúc '+dt;
     ex.updatedAt=dt;
     L[idx]=ex;
     DB.sL(L);
     unitOut=ex.unit;
     const T=DB.gT();
-    T.push({id:genTid(),type:'NHẬP',labelId:id,bravoCode:ex.bravoCode,productName:ex.productName,unit:ex.unit,qty:p.qty,warehouse:ex.warehouse,fromLoc:null,toLoc:loc,note:'⚠️ Quét trùng tem — cộng dồn vào tem đã có',isDup:true,datetime:dt,date:td});
+    T.push({id:genTid(),type:'NHẬP',labelId:id,uid:ex.uid,bravoCode:ex.bravoCode,productName:ex.productName,unit:ex.unit,qty:p.qty,warehouse:ex.warehouse,fromLoc:null,toLoc:loc,note:'Quét lại cùng vị trí — cộng dồn vào tem đã có',isDup:true,datetime:dt,date:td});
+    DB.sT(T);
+  }else if(isNewLocDup){
+    // Cùng mã tem NHƯNG vị trí khác các vị trí đã lưu -> tạo DÒNG MỚI, giữ nguyên các dòng cũ, không đè vị trí
+    const dt=now();
+    const oldLocs=dupRows.map(l=>l.location||'—').join(', ');
+    const newUid=genUid();
+    const newLabel={
+      id,uid:newUid,bravoCode,productName:p.productName,
+      qty:p.qty,unit,pack:'—',warehouse,
+      version:p.version||'',lot:p.lot||'',
+      note:'⚠️ TEM TRÙNG — cùng mã tem, nhập ở vị trí khác vị trí gốc ('+oldLocs+')',printSize:'a5',
+      remaining:p.qty,issued:0,location:loc,status:'ACTIVE',
+      isDupTem:true,
+      createdAt:dt,createdDate:td,
+      receivedAt:dt,receivedDate:td,stockDate:p.dateStr||td,updatedAt:dt
+    };
+    L.push(newLabel);DB.sL(L);
+    const T=DB.gT();
+    T.push({id:genTid(),type:'NHẬP',labelId:id,uid:newUid,bravoCode,productName:p.productName,unit,qty:p.qty,warehouse,fromLoc:null,toLoc:loc,note:'⚠️ Tem trùng — tạo dòng mới ở vị trí khác (vị trí gốc: '+oldLocs+')',isDup:true,isNewLocDup:true,datetime:dt,date:td});
     DB.sT(T);
   }else{
+    // Tem hoàn toàn mới, chưa từng có trong hệ thống
+    const dt=now();
+    const newUid=genUid();
     const newLabel={
-      id,bravoCode,productName:p.productName,
+      id,uid:newUid,bravoCode,productName:p.productName,
       qty:p.qty,unit,pack:'—',warehouse,
       version:p.version||'',lot:p.lot||'',
       note:'Nhập từ tem SX',printSize:'a5',
       remaining:p.qty,issued:0,location:loc,status:'ACTIVE',
-      createdAt:now(),createdDate:td,
-      receivedAt:now(),receivedDate:td,stockDate:p.dateStr||td,updatedAt:now()
+      createdAt:dt,createdDate:td,
+      receivedAt:dt,receivedDate:td,stockDate:p.dateStr||td,updatedAt:dt
     };
     L.push(newLabel);DB.sL(L);
     const T=DB.gT();
-    T.push({id:genTid(),type:'NHẬP',labelId:id,bravoCode,productName:p.productName,unit,qty:p.qty,warehouse,fromLoc:null,toLoc:loc,note:'Tem SX v'+(p.version||''),isDup:false,datetime:now(),date:td});
+    T.push({id:genTid(),type:'NHẬP',labelId:id,uid:newUid,bravoCode,productName:p.productName,unit,qty:p.qty,warehouse,fromLoc:null,toLoc:loc,note:'Tem SX v'+(p.version||''),isDup:false,datetime:dt,date:td});
     DB.sT(T);
   }
   stps(['sr1','sr2','sr3'],3);
-  sal('recv-alert',isDup?'aw':'as',(isDup?'⚠️ Tem trùng — đã cộng dồn '+p.qty+' '+unitOut+' vào tem sẵn có: ':'✅ Đã nhập: ')+p.productName+' ('+p.qty+' '+unitOut+') → 📍 '+loc);
+  let msg,cls;
+  if(isMergeSameLoc){msg='⚠️ Quét lại cùng vị trí — đã cộng dồn '+p.qty+' '+unitOut+' vào tem sẵn có: ';cls='aw';}
+  else if(isNewLocDup){msg='⚠️ TEM TRÙNG (vị trí khác vị trí gốc) — đã tạo dòng riêng, KHÔNG đè lên dòng cũ: ';cls='aw';}
+  else{msg='✅ Đã nhập: ';cls='as';}
+  sal('recv-alert',cls,msg+p.productName+' ('+p.qty+' '+unitOut+') → 📍 '+loc);
   renderRecvToday();
   // Tự động quay lại màn hình quét sau 1.2s
   setTimeout(resetRecv,1200);
@@ -1381,16 +1453,33 @@ function renderRecvToday(){
 
 // ===== MOVE =====
 let mvLblId=null,mvNewLoc=null;
-function resetMv(){mvLblId=null;mvNewLoc=null;document.getElementById('mv-lbl').value='';document.getElementById('mv-s1').classList.remove('hidden');document.getElementById('mv-s2').classList.add('hidden');stps(['sm1','sm2','sm3'],1);hal('mv-alert');}
+function resetMv(){mvLblId=null;mvNewLoc=null;document.getElementById('mv-lbl').value='';document.getElementById('mv-s1').classList.remove('hidden');document.getElementById('mv-s2').classList.add('hidden');const box=document.getElementById('mv-loc');if(box){const sb=box.closest('.scanbox');if(sb)sb.classList.remove('hidden');}stps(['sm1','sm2','sm3'],1);hal('mv-alert');}
 function mvStep1(){
   const val=gv('mv-lbl').trim();if(!val)return;
-  const lbl=DB.gL().find(l=>l.id===val);
-  if(!lbl){sal('mv-alert','ad','❌ Không tìm thấy!');return;}
-  if(lbl.status!=='ACTIVE'){sal('mv-alert','aw','⚠️ Chưa nhập kho!');return;}
-  if(lbl.remaining<=0){sal('mv-alert','ad','❌ Đã hết hàng!');return;}
-  mvLblId=lbl.id;
+  // Lấy TẤT CẢ dòng còn hàng khớp mã tem này — vì 1 mã tem giờ có thể đang ở nhiều vị trí khác nhau.
+  const rows=DB.gL().filter(l=>l.id===val&&l.status==='ACTIVE'&&l.remaining>0);
+  if(!rows.length){sal('mv-alert','ad','❌ Không tìm thấy tem còn hàng (chưa nhập kho hoặc đã hết)!');return;}
+  if(rows.length===1){ selectMvRow(rows[0].uid); return; }
+  // Nhiều dòng cùng mã tem ở nhiều vị trí khác nhau -> BẮT BUỘC chọn thủ công vị trí nguồn cần di chuyển
+  const list=rows.map(l=>`<div class="aci" style="cursor:pointer;padding:9px 11px;border:1px solid var(--border);border-radius:7px;margin-bottom:6px;background:#fff;" onmouseover="this.style.background='var(--pl)'" onmouseout="this.style.background='#fff'" onclick="selectMvRow('${l.uid}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span><span class="loc-b">📍 ${l.location||'—'}</span>${l.isDupTem?' <span class="badge gw" style="margin-left:4px;">Tem trùng</span>':''}</span>
+        <strong>Tồn: ${l.remaining} ${l.unit}</strong>
+      </div></div>`).join('');
+  document.getElementById('mv-info').innerHTML=`<div style="margin-bottom:6px;font-size:12px;">⚠️ Tem này đang tồn tại ở <strong>${rows.length}</strong> vị trí khác nhau. Vui lòng <strong>CHỌN THỦ CÔNG</strong> vị trí nguồn cần di chuyển:</div>${list}`;
+  document.getElementById('mv-s1').classList.add('hidden');document.getElementById('mv-s2').classList.remove('hidden');
+  const box=document.getElementById('mv-loc');if(box){const sb=box.closest('.scanbox');if(sb)sb.classList.add('hidden');}
+  stps(['sm1','sm2','sm3'],2);
+  sal('mv-alert','aw','⚠️ Có tem trùng ở nhiều vị trí — vui lòng chọn đúng vị trí nguồn ở trên trước khi quét vị trí mới.');
+}
+function selectMvRow(uid){
+  const lbl=DB.gL().find(l=>l.uid===uid);if(!lbl)return;
+  mvLblId=uid;
   document.getElementById('mv-info').innerHTML=`<strong>📦 ${lbl.productName}</strong><br>Bravo: ${lbl.bravoCode} | Tồn: <strong>${lbl.remaining} ${lbl.unit}</strong> | Vị trí hiện tại: <span class="loc-b">📍 ${lbl.location||'—'}</span>`;
-  document.getElementById('mv-s1').classList.add('hidden');document.getElementById('mv-s2').classList.remove('hidden');stps(['sm1','sm2','sm3'],2);
+  document.getElementById('mv-s1').classList.add('hidden');document.getElementById('mv-s2').classList.remove('hidden');
+  const box=document.getElementById('mv-loc');if(box){const sb=box.closest('.scanbox');if(sb)sb.classList.remove('hidden');}
+  hal('mv-alert');
+  stps(['sm1','sm2','sm3'],2);
   setTimeout(()=>{const i=document.getElementById('mv-loc');if(i){i.value='';i.focus();}},80);
 }
 function mvLocInput(el){
@@ -1399,16 +1488,20 @@ function mvLocInput(el){
   clearTimeout(window._mvT);
   window._mvT=setTimeout(()=>{
     const v=el.value.trim();
-    if(v.length>=2)mvSave();
+    if(v.length>=2)guardedSave('mv-loc',mvSave);
   },280);
 }
 function mvSave(){
   const loc=gv('mv-loc').trim();if(!loc){sal('mv-alert','ad','Chưa có vị trí!');return;}
-  const L=DB.gL();const idx=L.findIndex(l=>l.id===mvLblId);if(idx===-1)return;
+  if(!mvLblId){sal('mv-alert','aw','⚠️ Chưa chọn dòng tem cần di chuyển!');return;}
+  const L=DB.gL();const idx=L.findIndex(l=>l.uid===mvLblId);if(idx===-1)return;
   const old=L[idx].location;
   if(loc===old){sal('mv-alert','aw','⚠️ Vị trí mới giống cũ: '+loc);return;}
+  // Không cho phép di chuyển tới vị trí đã có 1 dòng KHÁC của CÙNG mã tem (tránh tạo lẫn lộn 2 dòng cùng vị trí)
+  const collide=L.find(l=>l.id===L[idx].id&&l.uid!==L[idx].uid&&(l.location||'')===loc);
+  if(collide){sal('mv-alert','ad','❌ Vị trí "'+loc+'" đã có 1 dòng khác của CÙNG mã tem này (tồn '+collide.remaining+' '+collide.unit+'). Vui lòng gộp thủ công qua trang Tồn kho hoặc chọn vị trí khác.');return;}
   L[idx].location=loc;L[idx].updatedAt=now();DB.sL(L);
-  const T=DB.gT();T.push({id:genTid(),type:'DI CHUYỂN',labelId:mvLblId,bravoCode:L[idx].bravoCode,productName:L[idx].productName,unit:L[idx].unit,qty:L[idx].remaining,warehouse:L[idx].warehouse||'',fromLoc:old,toLoc:loc,note:'Di chuyển',datetime:now(),date:today()});DB.sT(T);
+  const T=DB.gT();T.push({id:genTid(),type:'DI CHUYỂN',labelId:L[idx].id,uid:L[idx].uid,bravoCode:L[idx].bravoCode,productName:L[idx].productName,unit:L[idx].unit,qty:L[idx].remaining,warehouse:L[idx].warehouse||'',fromLoc:old,toLoc:loc,note:'Di chuyển',datetime:now(),date:today()});DB.sT(T);
   sal('mv-alert','as','✅ Đã di chuyển: '+L[idx].bravoCode+' → <span class="loc-b">📍 '+loc+'</span>');
   stps(['sm1','sm2','sm3'],3);renderMvHist();setTimeout(resetMv,1500);
 }
@@ -1425,6 +1518,7 @@ function resetIs(){
   const i=document.getElementById('is-lbl');if(i)i.value='';
   const p=document.getElementById('is-parsed');if(p)p.classList.add('hidden');
   document.getElementById('is-s1').classList.remove('hidden');document.getElementById('is-s2').classList.add('hidden');document.getElementById('is-s3').classList.add('hidden');
+  const s2=document.getElementById('is-s2');if(s2)s2.innerHTML='';
   stps(['si1','si2','si3'],1);hal('is-alert');
   setTimeout(()=>{const el=document.getElementById('is-lbl');if(el)el.focus();},100);
 }
@@ -1433,51 +1527,90 @@ function isStep1(){
   const parsed=parseProductionQR(raw);
   if(!parsed){sal('is-alert','ad','❌ Không nhận diện được QR tem sản xuất!');document.getElementById('is-lbl').value='';return;}
 
-  // Tìm tem trong kho: dùng raw làm ID (chính xác nhất)
+  // Tìm TẤT CẢ dòng còn hàng khớp đúng mã tem (raw) — vì 1 mã tem giờ có thể tồn tại ở nhiều vị trí khác nhau.
   const L=DB.gL();
-  let lbl=L.find(l=>l.id===parsed.raw);
-  if(!lbl){
-    // Fallback: tìm theo tên SP + version còn hàng
+  let rows=L.filter(l=>l.id===parsed.raw&&l.status==='ACTIVE'&&l.remaining>0);
+
+  if(!rows.length){
+    // Fallback: tìm theo tên SP + version còn hàng (mã tem không khớp tuyệt đối)
     const candidates=L.filter(l=>l.productName.toLowerCase()===parsed.productName.toLowerCase()&&l.version===parsed.version&&l.status==='ACTIVE'&&l.remaining>0);
-    if(candidates.length)lbl=candidates[0];
+    if(candidates.length===1){executeIssue(candidates[0].uid,parsed);return;}
+    if(candidates.length>1){showIssuePicker(candidates,parsed,true);return;}
+    handleIssueError(parsed);
+    return;
   }
-  if(lbl){
-    // ===== Trường hợp bình thường: tem có trong kho =====
-    // CHỈ trừ đúng số lượng ghi trên tem đang quét (parsed.qty), KHÔNG xuất hết toàn bộ số tồn
-    // đang có của tem đó — vì tồn có thể là số dồn từ nhiều lần quét trùng lúc nhập (nhiều lô).
-    const idx=L.findIndex(l=>l.id===lbl.id);
-    const before=L[idx].remaining||0;
-    const qty=parsed.qty;
-    const over=qty>before; // xuất vượt số tồn hiện ghi nhận — vẫn cho xuất, chỉ cảnh báo
-    L[idx].issued=(L[idx].issued||0)+qty;
-    L[idx].remaining=Math.max(0,before-qty);
-    L[idx].status=L[idx].remaining>0?'ACTIVE':'EMPTY';
-    L[idx].updatedAt=now();
-    DB.sL(L);
-    const T=DB.gT();
-    T.push({id:genTid(),type:'XUẤT',labelId:lbl.id,bravoCode:lbl.bravoCode,productName:lbl.productName,unit:lbl.unit,qty,warehouse:lbl.warehouse||'',fromLoc:lbl.location,toLoc:null,note:over?('⚠️ Xuất '+qty+' '+lbl.unit+' nhưng tồn trước đó chỉ còn '+before+' '+lbl.unit+' — đã trừ về 0, cần đối chiếu'):'Xuất tem SX',isError:over,datetime:now(),date:today()});
-    DB.sT(T);
-    stps(['si1','si2','si3'],3);
-    sal('is-alert',over?'aw':'as',(over?'⚠️ Đã xuất (vượt tồn ghi nhận): ':'✅ Đã xuất: ')+lbl.productName+' | '+qty+' '+lbl.unit+' | 📍 '+lbl.location+(L[idx].remaining>0?' | Còn lại trên tem: '+L[idx].remaining+' '+lbl.unit:''));
-  }else{
-    // ===== TEM LỖI: không tìm thấy trong hệ thống hoặc đã hết hàng =====
-    // KHÔNG chặn — vẫn ghi nhận giao dịch xuất (theo số lượng trên tem) để đối chiếu sau,
-    // chỉ gắn cờ/nhãn cảnh báo "Tem lỗi" để dễ nhận biết và tra soát.
-    const anyMatch=L.find(l=>l.id===parsed.raw)||L.find(l=>l.productName.toLowerCase()===parsed.productName.toLowerCase()&&l.version===parsed.version);
-    const cat2=DB.gC().find(c=>c.productName.toLowerCase()===parsed.productName.toLowerCase());
-    const bravoCode=anyMatch?anyMatch.bravoCode:(cat2?cat2.bravoCode:'(Chưa có DM)');
-    const unit=anyMatch?anyMatch.unit:(cat2?cat2.unit:'Cái');
-    const warehouse=anyMatch?anyMatch.warehouse||'':'';
-    const loc=anyMatch?anyMatch.location||'—':'—';
-    const qty=parsed.qty;
-    const T=DB.gT();
-    T.push({id:genTid(),type:'XUẤT',labelId:parsed.raw,bravoCode,productName:parsed.productName,unit,qty,warehouse,fromLoc:loc,toLoc:null,note:'⚠️ Tem lỗi — không khớp tồn kho (không tìm thấy hoặc đã hết hàng), lưu để đối chiếu sau',isError:true,datetime:now(),date:today()});
-    DB.sT(T);
-    stps(['si1','si2','si3'],3);
-    sal('is-alert','aw','⚠️ [Tem lỗi] Không khớp tồn kho: '+parsed.productName+' | '+qty+' '+unit+' — đã lưu để đối chiếu sau.');
-  }
+  if(rows.length===1){executeIssue(rows[0].uid,parsed);return;}
+  // Có NHIỀU dòng cùng mã tem ở nhiều vị trí khác nhau -> BẮT BUỘC thao tác thủ công chọn đúng vị trí cần xuất
+  showIssuePicker(rows,parsed,false);
+}
+
+// Hiển thị danh sách các vị trí đang giữ cùng mã tem để người dùng CHỌN THỦ CÔNG vị trí cần xuất.
+// Không được tự động chọn 1 dòng bất kỳ để trừ — tránh trừ nhầm vị trí khi có tem trùng.
+function showIssuePicker(rows,parsed,isFallback){
+  curIsParsed=parsed;
+  document.getElementById('is-s1').classList.add('hidden');
+  document.getElementById('is-s2').classList.remove('hidden');
+  document.getElementById('is-s3').classList.add('hidden');
+  const list=rows.map(l=>`<div class="aci" style="cursor:pointer;padding:10px 12px;border:1px solid var(--border);border-radius:7px;margin-bottom:6px;background:#fff;" onmouseover="this.style.background='var(--pl)'" onmouseout="this.style.background='#fff'" onclick="executeIssue('${l.uid}',curIsParsed)">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span><span class="loc-b">📍 ${l.location||'—'}</span> ${l.isDupTem?'<span class="badge gw" style="margin-left:4px;">Tem trùng</span>':''}</span>
+        <strong>Tồn: ${l.remaining} ${l.unit}</strong>
+      </div>
+    </div>`).join('');
+  document.getElementById('is-s2').innerHTML=`
+    <div class="alert aw" style="margin-bottom:9px;font-size:12px;">⚠️ Mã tem <strong>${parsed.productName}</strong> đang tồn tại ở <strong>${rows.length}</strong> vị trí khác nhau${isFallback?' (khớp theo tên SP + version, không khớp tuyệt đối mã tem)':''}. Vui lòng <strong>CHỌN ĐÚNG vị trí</strong> cần xuất bên dưới (thao tác thủ công bắt buộc khi có tem trùng):</div>
+    ${list}
+    <button class="btn btn-o btn-sm" onclick="resetIs()" style="width:100%;margin-top:4px;">← Hủy / Quét lại</button>`;
+  stps(['si1','si2','si3'],2);
+  hal('is-alert');
+}
+
+// Thực thi xuất kho cho ĐÚNG 1 dòng (theo uid) — dùng cho cả trường hợp tự động (chỉ 1 vị trí)
+// và trường hợp người dùng đã chọn thủ công vị trí (khi có tem trùng nhiều vị trí).
+function executeIssue(uid,parsed){
+  const L=DB.gL();const idx=L.findIndex(l=>l.uid===uid);if(idx===-1)return;
+  const lbl=L[idx];
+  const before=lbl.remaining||0;
+  const qty=parsed.qty;
+  const over=qty>before; // xuất vượt số tồn hiện ghi nhận — vẫn cho xuất, chỉ cảnh báo
+  L[idx].issued=(L[idx].issued||0)+qty;
+  L[idx].remaining=Math.max(0,before-qty);
+  L[idx].status=L[idx].remaining>0?'ACTIVE':'EMPTY';
+  L[idx].updatedAt=now();
+  DB.sL(L);
+  const T=DB.gT();
+  T.push({id:genTid(),type:'XUẤT',labelId:lbl.id,uid:lbl.uid,bravoCode:lbl.bravoCode,productName:lbl.productName,unit:lbl.unit,qty,warehouse:lbl.warehouse||'',fromLoc:lbl.location,toLoc:null,note:over?('⚠️ Xuất '+qty+' '+lbl.unit+' nhưng tồn trước đó chỉ còn '+before+' '+lbl.unit+' — đã trừ về 0, cần đối chiếu'):'Xuất tem SX',isError:over,datetime:now(),date:today()});
+  DB.sT(T);
+  document.getElementById('is-s1').classList.add('hidden');
+  document.getElementById('is-s2').classList.add('hidden');
+  document.getElementById('is-s3').classList.remove('hidden');
+  stps(['si1','si2','si3'],3);
+  sal('is-alert',over?'aw':'as',(over?'⚠️ Đã xuất (vượt tồn ghi nhận): ':'✅ Đã xuất: ')+lbl.productName+' | '+qty+' '+lbl.unit+' | 📍 '+lbl.location+(L[idx].remaining>0?' | Còn lại trên tem: '+L[idx].remaining+' '+lbl.unit:''));
   renderIsToday();
-  // Tự động quay lại quét tiếp sau 1.5s
+  setTimeout(resetIs,1500);
+}
+
+// ===== TEM LỖI: không tìm thấy trong hệ thống hoặc đã hết hàng =====
+// KHÔNG chặn — vẫn ghi nhận giao dịch xuất (theo số lượng trên tem) để đối chiếu sau,
+// chỉ gắn cờ/nhãn cảnh báo "Tem lỗi" để dễ nhận biết và tra soát.
+function handleIssueError(parsed){
+  const L=DB.gL();
+  const anyMatch=L.find(l=>l.id===parsed.raw)||L.find(l=>l.productName.toLowerCase()===parsed.productName.toLowerCase()&&l.version===parsed.version);
+  const cat2=DB.gC().find(c=>c.productName.toLowerCase()===parsed.productName.toLowerCase());
+  const bravoCode=anyMatch?anyMatch.bravoCode:(cat2?cat2.bravoCode:'(Chưa có DM)');
+  const unit=anyMatch?anyMatch.unit:(cat2?cat2.unit:'Cái');
+  const warehouse=anyMatch?anyMatch.warehouse||'':'';
+  const loc=anyMatch?anyMatch.location||'—':'—';
+  const qty=parsed.qty;
+  const T=DB.gT();
+  T.push({id:genTid(),type:'XUẤT',labelId:parsed.raw,bravoCode,productName:parsed.productName,unit,qty,warehouse,fromLoc:loc,toLoc:null,note:'⚠️ Tem lỗi — không khớp tồn kho (không tìm thấy hoặc đã hết hàng), lưu để đối chiếu sau',isError:true,datetime:now(),date:today()});
+  DB.sT(T);
+  document.getElementById('is-s1').classList.add('hidden');
+  document.getElementById('is-s2').classList.add('hidden');
+  document.getElementById('is-s3').classList.remove('hidden');
+  stps(['si1','si2','si3'],3);
+  sal('is-alert','aw','⚠️ [Tem lỗi] Không khớp tồn kho: '+parsed.productName+' | '+qty+' '+unit+' — đã lưu để đối chiếu sau.');
+  renderIsToday();
   setTimeout(resetIs,1500);
 }
 function renderIsToday(){
@@ -1564,11 +1697,11 @@ function renderInvPage(){
       </td>
       <td>${l.location?'<span class="loc-b">📍 '+l.location+'</span>':'<span style="color:var(--muted)">—</span>'}</td>
       <td><span class="badge ${SC[dispSt]||'gg'}">${SL[dispSt]||dispSt}</span></td>
-      <td style="font-size:10px;color:${l.dupScanCount?'#92400e':'var(--muted)'};max-width:160px;">${l.dupScanCount?'⚠️ Trùng x'+l.dupScanCount+' — ':''}${l.note||'—'}</td>
+      <td style="font-size:10px;color:${l.dupScanCount||l.isDupTem?'#92400e':'var(--muted)'};max-width:160px;">${l.isDupTem?'⚠️ TEM TRÙNG — ':''}${l.dupScanCount?'⚠️ Trùng x'+l.dupScanCount+' — ':''}${l.note||'—'}</td>
       <td style="white-space:nowrap;">
-        <button class="btn btn-sm" style="background:var(--pl);color:var(--primary);border:1px solid #b3cff7;" onclick="showDet('${l.id}')">🔍</button>
-        <button class="btn btn-sm" style="background:#f0f7ff;color:var(--primary);border:1px solid #b3cff7;" onclick="openEd('${l.id}')">✏️</button>
-        <button class="btn btn-sm" style="background:var(--dl);color:var(--danger);border:1px solid #f5c6c6;" onclick="delLbl('${l.id}')">🗑️</button>
+        <button class="btn btn-sm" style="background:var(--pl);color:var(--primary);border:1px solid #b3cff7;" onclick="showDet('${l.uid}')">🔍</button>
+        <button class="btn btn-sm" style="background:#f0f7ff;color:var(--primary);border:1px solid #b3cff7;" onclick="openEd('${l.uid}')">✏️</button>
+        <button class="btn btn-sm" style="background:var(--dl);color:var(--danger);border:1px solid #f5c6c6;" onclick="delLbl('${l.uid}')">🗑️</button>
       </td></tr>`);
   }
   tbody.innerHTML=rows.join('');
@@ -1733,38 +1866,28 @@ function saveCapacity(){
   saveCap(cap);closeMo('mo-capacity');renderDash();
 }
 
-function openEd(id){
-  const l=DB.gL().find(x=>x.id===id);if(!l)return;
-  document.getElementById('ed-id').value=id;document.getElementById('ed-bravo').value=l.bravoCode;document.getElementById('ed-name').value=l.productName;document.getElementById('ed-qty').value=l.qty;document.getElementById('ed-rem').value=l.remaining;document.getElementById('ed-unit').value=l.unit;document.getElementById('ed-loc').value=l.location||'';document.getElementById('ed-wh').value=l.warehouse||'GSQV';document.getElementById('ed-st').value=l.status;document.getElementById('ed-sdate').value=l.stockDate||l.receivedDate||'';document.getElementById('ed-note').value=l.note||'';hal('ed-alert');document.getElementById('mo-edit').classList.remove('hidden');
+function openEd(uid){
+  const l=DB.gL().find(x=>x.uid===uid);if(!l)return;
+  document.getElementById('ed-id').value=uid;document.getElementById('ed-bravo').value=l.bravoCode;document.getElementById('ed-name').value=l.productName;document.getElementById('ed-qty').value=l.qty;document.getElementById('ed-rem').value=l.remaining;document.getElementById('ed-unit').value=l.unit;document.getElementById('ed-loc').value=l.location||'';document.getElementById('ed-wh').value=l.warehouse||'GSQV';document.getElementById('ed-st').value=l.status;document.getElementById('ed-sdate').value=l.stockDate||l.receivedDate||'';document.getElementById('ed-note').value=l.note||'';hal('ed-alert');document.getElementById('mo-edit').classList.remove('hidden');
 }
 function saveEdit(){
-  const id=gv('ed-id');const L=DB.gL();const idx=L.findIndex(l=>l.id===id);if(idx===-1)return;
+  const uid=gv('ed-id');const L=DB.gL();const idx=L.findIndex(l=>l.uid===uid);if(idx===-1)return;
   const qty=parseInt(gv('ed-qty')),rem=parseInt(gv('ed-rem'));
   if(isNaN(qty)||qty<1){sal('ed-alert','ad','SL phải ≥ 1');return;}if(isNaN(rem)||rem<0){sal('ed-alert','ad','Tồn không âm!');return;}if(rem>qty){sal('ed-alert','ad','Tồn > SL nhập!');return;}
-  L[idx]={...L[idx],bravoCode:gv('ed-bravo').trim(),productName:gv('ed-name').trim(),qty,remaining:rem,issued:qty-rem,unit:gv('ed-unit'),location:gv('ed-loc').trim()||null,warehouse:gv('ed-wh'),status:gv('ed-st'),stockDate:gv('ed-sdate').trim()||L[idx].stockDate,note:gv('ed-note').trim(),updatedAt:now()};
+  // Nếu người dùng sửa vị trí trùng với 1 dòng KHÁC của CÙNG mã tem -> cảnh báo (không chặn cứng vì đây là sửa thủ công có chủ đích)
+  const newLoc=gv('ed-loc').trim()||null;
+  const collide=L.find(l=>l.uid!==uid&&l.id===L[idx].id&&(l.location||'')===(newLoc||''));
+  if(collide&&!confirm('⚠️ Vị trí "'+newLoc+'" đã có 1 dòng khác của CÙNG mã tem này (tồn '+collide.remaining+' '+collide.unit+'). Vẫn lưu (2 dòng sẽ cùng ở vị trí này)?'))return;
+  L[idx]={...L[idx],bravoCode:gv('ed-bravo').trim(),productName:gv('ed-name').trim(),qty,remaining:rem,issued:qty-rem,unit:gv('ed-unit'),location:newLoc,warehouse:gv('ed-wh'),status:gv('ed-st'),stockDate:gv('ed-sdate').trim()||L[idx].stockDate,note:gv('ed-note').trim(),updatedAt:now()};
   DB.sL(L);closeMo('mo-edit');renderInv();
 }
-function delLbl(id){if(!confirm('Xóa tem '+id+'?'))return;DB.sL(DB.gL().filter(l=>l.id!==id));renderInv();renderDash();}
-function showDet(id){
-  const l=DB.gL().find(x=>x.id===id);if(!l)return;const T=DB.gT().filter(t=>t.labelId===id);detailLbl=l;
-  const age=ageDays(l.stockDate||l.receivedDate);const pct=l.qty>0?Math.round((l.remaining/l.qty)*100):0;
-  document.getElementById('detail-body').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:11px;">
-    <div><div style="font-size:10px;color:var(--muted);">Mã Bravo</div><div style="font-weight:700;font-size:14px;">${l.bravoCode}</div></div>
-    <div><div style="font-size:10px;color:var(--muted);">Mã tem</div><div style="font-family:monospace;font-size:10px;">${l.id}</div></div>
-    <div><div style="font-size:10px;color:var(--muted);">Sản phẩm</div><div style="font-weight:600;">${l.productName}</div></div>
-    <div><div style="font-size:10px;color:var(--muted);">Kho</div><div><span class="kho-b">${l.warehouse||'—'}</span></div></div>
-    <div><div style="font-size:10px;color:var(--muted);">Vị trí</div><div>${l.location?'<span class="loc-b">📍 '+l.location+'</span>':'—'}</div></div>
-    <div><div style="font-size:10px;color:var(--muted);">Ngày tồn</div><div><span class="fifo-b">📅 ${fmtD(l.stockDate||l.receivedDate)}</span>${age!==null?' ('+age+' ngày)':''}</div></div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:11px;">
-    <div class="sc"><div class="sl2">SL nhập</div><div class="sv" style="font-size:18px;">${l.qty}</div><div class="ss">${l.unit}</div></div>
-    <div class="sc"><div class="sl2">SL xuất</div><div class="sv" style="font-size:18px;color:var(--danger)">${l.issued||0}</div><div class="ss">${l.unit}</div></div>
-    <div class="sc"><div class="sl2">Tồn còn</div><div class="sv" style="font-size:18px;color:var(--success)">${l.remaining}</div><div class="ss">${l.unit} (${pct}%)</div></div>
-  </div>
-  <div style="font-size:11px;font-weight:600;margin-bottom:5px;">Lịch sử GD</div>
-  ${T.length===0?'<p style="font-size:11px;color:var(--muted);">Chưa có GD</p>':T.map(t=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;"><span><span class="badge ${t.type==='NHẬP'?'gs':t.type==='XUẤT'?'gd':'gi'}">${t.type}</span> ${t.qty} ${t.unit||''} ${t.note?'— '+t.note:''}</span><span style="color:var(--muted);">${t.datetime}</span></div>`).join('')}`;
-  document.getElementById('mo-detail').classList.remove('hidden');
+function delLbl(uid){
+  const l=DB.gL().find(x=>x.uid===uid);
+  const label=l?(l.id+' — 📍 '+(l.location||'—')):uid;
+  if(!confirm('Xóa dòng tem '+label+'?'))return;
+  DB.sL(DB.gL().filter(l=>l.uid!==uid));renderInv();renderDash();
 }
+// (Ghi chú: hàm showDet hiển thị chi tiết tem được định nghĩa ở phần "INVENTORY: xem lịch sử" bên dưới)
 
 // ===== HISTORY =====
 function renderHist(){
@@ -1868,7 +1991,7 @@ function stReset(){
   hal('st-alert');
 }
 function stAutoTrig(el){clearTimeout(stScT['lbl']);stScT['lbl']=setTimeout(()=>{if(el.value.trim().length>=4)stScan1();},220);}
-function stLocAutoTrig(el){clearTimeout(stScT['loc']);stScT['loc']=setTimeout(()=>{if(el.value.trim().length>=2)stConfirm();},200);}
+function stLocAutoTrig(el){clearTimeout(stScT['loc']);stScT['loc']=setTimeout(()=>{if(el.value.trim().length>=2)guardedSave('st-loc',stConfirm);},200);}
 function stConfirm(){
   if(!stCurLbl)return;const loc=gv('st-loc').trim();if(!loc)return;
   const S=DB.gS();const si=S.findIndex(x=>x.id===actStId);if(si<0)return;
@@ -2013,7 +2136,7 @@ function expInvCSV(){const L=DB.gL();const rows=[['Mã tem','Mã Bravo','Tên SP
 function expHistCSV(){const rows=[['Thời gian','Loại','Mã tem','Mã Bravo','Tên SP','Kho','SL','ĐVT','Từ','Đến','Ghi chú']];DB.gT().forEach(t=>rows.push([t.datetime,t.type,t.labelId,t.bravoCode,t.productName,t.warehouse||'',t.qty,t.unit||'',t.fromLoc||'',t.toLoc||'',t.note||'']));dlCSV(rows,'lich_su_'+today()+'.csv');}
 function dlCSV(rows,fn){const bom='\uFEFF';const csv=bom+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download=fn;a.click();}
 function expJSON(){const data={labels:DB.gL(),transactions:DB.gT(),catalog:DB.gC(),stocktakes:DB.gS(),exportedAt:now()};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='kho_backup_'+today()+'.json';a.click();sal('bk-alert','as','✅ Đã xuất backup!');}
-function impJSON(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(!confirm('Import sẽ GHI ĐÈ toàn bộ dữ liệu. Xác nhận?'))return;if(d.labels)DB.sL(d.labels);if(d.transactions)DB.sT(d.transactions);if(d.catalog)DB.sC(d.catalog);if(d.stocktakes)DB.sS(d.stocktakes);sal('bk-alert','as','✅ Import thành công!');renderDash();}catch(err){sal('bk-alert','ad','❌ '+err.message);}};r.readAsText(file);e.target.value='';}
+function impJSON(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(!confirm('Import sẽ GHI ĐÈ toàn bộ dữ liệu. Xác nhận?'))return;if(d.labels)DB.sL(d.labels);if(d.transactions)DB.sT(d.transactions);if(d.catalog)DB.sC(d.catalog);if(d.stocktakes)DB.sS(d.stocktakes);migrateLabelUids();sal('bk-alert','as','✅ Import thành công!');renderDash();}catch(err){sal('bk-alert','ad','❌ '+err.message);}};r.readAsText(file);e.target.value='';}
 function clearAll(){if(!confirm('XÓA TOÀN BỘ dữ liệu?'))return;if(!confirm('Xác nhận lần 2?'))return;Object.values(KS).forEach(k=>localStorage.removeItem(k));if(fbDb&&fbOn)fbDb.ref('kho').remove();sal('bk-alert','as','✅ Đã xóa.');renderDash();}
 
 // ===== HELPERS =====
@@ -2113,8 +2236,8 @@ function genBatch(){
     const customer=(tr.querySelector('.br-cust')||{}).value||'';
     const inputBy=(tr.querySelector('.br-inputby')||{}).value||'';
     const note=tr.querySelector('.br-note').value.trim();
-    const id=genId();const td=today();
-    const lbl={id,bravoCode:bravo,productName:name,qty,unit,pack,warehouse:wh,note,printSize:ps,customer:customer.trim(),inputBy:inputBy.trim(),remaining:qty,issued:0,location:null,status:'PENDING',createdAt:now(),createdDate:td,receivedAt:null,receivedDate:null,stockDate:null,updatedAt:now()};
+    const id=genId();const uid=genUid();const td=today();
+    const lbl={id,uid,bravoCode:bravo,productName:name,qty,unit,pack,warehouse:wh,note,printSize:ps,customer:customer.trim(),inputBy:inputBy.trim(),remaining:qty,issued:0,location:null,status:'PENDING',createdAt:now(),createdDate:td,receivedAt:null,receivedDate:null,stockDate:null,updatedAt:now()};
     batchGenerated.push(lbl);cnt++;
     const div=document.createElement('div');div.style.cssText='margin:4px;';wrap.appendChild(div);
     const pId='bp-'+id.replace(/[^a-z0-9]/gi,'_');div.id=pId;
@@ -2152,7 +2275,7 @@ function pushStockToInventory(){
   const sess=DB.gS().find(s=>s.id===actStId);if(!sess||!sess.items.length){alert('Chưa có dữ liệu kiểm kê!');return;}
   if(!confirm('⚠️ Thao tác này sẽ XÓA TOÀN BỘ tồn kho hiện tại và thay bằng dữ liệu kiểm kê "'+sess.name+'".\nTiếp tục?'))return;
   const td=today();const newLabels=sess.items.map(it=>{
-    return{id:genId(),bravoCode:it.bravoCode,productName:it.productName,qty:it.sysQty,unit:it.unit,pack:'—',warehouse:'',note:'Từ KK: '+sess.name,printSize:'a5',remaining:it.sysQty,issued:0,location:it.scanLoc,status:'ACTIVE',createdAt:now(),createdDate:td,receivedAt:now(),receivedDate:td,stockDate:td,updatedAt:now()};
+    return{id:genId(),uid:genUid(),bravoCode:it.bravoCode,productName:it.productName,qty:it.sysQty,unit:it.unit,pack:'—',warehouse:'',note:'Từ KK: '+sess.name,printSize:'a5',remaining:it.sysQty,issued:0,location:it.scanLoc,status:'ACTIVE',createdAt:now(),createdDate:td,receivedAt:now(),receivedDate:td,stockDate:td,updatedAt:now()};
   });
   DB.sL(newLabels);
   // ghi 1 transaction tổng
@@ -2167,7 +2290,79 @@ function delStItem(labelId){
   DB.sS(S);renderStTbl();
 }
 
-// ══════════ RECEIVE LOOKUP ══════════
+// ══════ DỌN DẸP TEM TRÙNG DO LỖI HỆ THỐNG CŨ (double-trigger bug) ══════
+// Chỉ coi là "trùng do lỗi" khi CÙNG mã tem (id) VÀ CÙNG vị trí (location) — vì với logic mới,
+// trường hợp này không còn được tạo ra nữa (cùng vị trí luôn được cộng dồn vào 1 dòng duy nhất).
+// Tem trùng HỢP LỆ (cùng mã, khác vị trí) sẽ KHÔNG bị gộp bởi công cụ này.
+let _dupCleanGroups=null;
+function scanDupCleanup(){
+  const L=DB.gL();
+  const groups={};
+  L.forEach(l=>{
+    const key=l.id+'@@'+(l.location||'');
+    if(!groups[key])groups[key]=[];
+    groups[key].push(l);
+  });
+  const dupGroups=Object.values(groups).filter(g=>g.length>1);
+  const resEl=document.getElementById('dupclean-result');
+  if(!dupGroups.length){
+    resEl.innerHTML='<div class="alert as" style="font-size:12px;">✅ Không tìm thấy dòng nào bị trùng do lỗi cũ (cùng mã tem + cùng vị trí). Dữ liệu sạch!</div>';
+    _dupCleanGroups=null;
+    return;
+  }
+  _dupCleanGroups=dupGroups;
+  const totalRows=dupGroups.reduce((s,g)=>s+g.length,0);
+  resEl.innerHTML=`<div class="alert aw" style="font-size:12px;">⚠️ Tìm thấy <strong>${dupGroups.length}</strong> nhóm bị trùng do lỗi cũ, tổng cộng <strong>${totalRows}</strong> dòng (sẽ gộp còn ${dupGroups.length} dòng). <button class="btn btn-sm btn-w" style="margin-left:6px;" onclick="openDupCleanupPreview()">👀 Xem trước &amp; Gộp</button></div>`;
+}
+function openDupCleanupPreview(){
+  if(!_dupCleanGroups||!_dupCleanGroups.length)return;
+  const rows=_dupCleanGroups.map((g,i)=>{
+    const totalQty=g.reduce((s,l)=>s+(l.qty||0),0);
+    const totalRem=g.reduce((s,l)=>s+(l.remaining||0),0);
+    const totalIssued=g.reduce((s,l)=>s+(l.issued||0),0);
+    return `<tr><td style="font-size:10px;">${i+1}</td><td class="mono" style="font-size:10px;">${g[0].id}</td><td>${g[0].productName}</td><td><span class="loc-b">📍 ${g[0].location||'—'}</span></td><td>${g.length} dòng</td><td>${totalQty} ${g[0].unit}</td><td>${totalIssued} ${g[0].unit}</td><td><strong>${totalRem} ${g[0].unit}</strong></td></tr>`;
+  }).join('');
+  document.getElementById('dupclean-body').innerHTML=`
+    <div class="alert aw" style="margin-bottom:10px;font-size:12px;">Sẽ gộp mỗi nhóm bên dưới thành <strong>1 dòng duy nhất</strong> (cộng dồn SL nhập / SL xuất / Tồn), giữ lại vị trí hiện tại, có ghi chú lại lịch sử gộp. Vui lòng kiểm tra kỹ trước khi xác nhận — nên <strong>Xuất JSON backup</strong> trước khi gộp.</div>
+    <div class="tw" style="max-height:340px;overflow-y:auto;"><table><thead><tr><th>#</th><th>Mã tem</th><th>Tên SP</th><th>Vị trí</th><th>Số dòng</th><th>Tổng nhập</th><th>Tổng xuất</th><th>Tổng tồn</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  document.getElementById('mo-dupclean').classList.remove('hidden');
+}
+function confirmDupCleanup(){
+  if(!_dupCleanGroups||!_dupCleanGroups.length)return;
+  const L=DB.gL();
+  const T=DB.gT();
+  const dt=now();
+  let mergedCount=0;
+  _dupCleanGroups.forEach(g=>{
+    // Sắp xếp theo thời điểm tạo để giữ dòng CŨ NHẤT làm dòng gốc, xoá các dòng còn lại
+    const sorted=g.slice().sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''));
+    const keep=sorted[0];
+    const others=sorted.slice(1);
+    const idx=L.findIndex(l=>l.uid===keep.uid);
+    if(idx===-1)return;
+    const totalQty=g.reduce((s,l)=>s+(l.qty||0),0);
+    const totalRem=g.reduce((s,l)=>s+(l.remaining||0),0);
+    const totalIssued=g.reduce((s,l)=>s+(l.issued||0),0);
+    L[idx].qty=totalQty;L[idx].remaining=totalRem;L[idx].issued=totalIssued;
+    L[idx].status=totalRem>0?'ACTIVE':'EMPTY';
+    L[idx].note='🧹 Đã gộp '+g.length+' dòng trùng do lỗi hệ thống cũ (cùng mã tem, cùng vị trí) lúc '+dt;
+    L[idx].updatedAt=dt;
+    delete L[idx].dupScanCount;
+    others.forEach(o=>{
+      const oi=L.findIndex(l=>l.uid===o.uid);
+      if(oi>-1)L.splice(oi,1);
+    });
+    T.push({id:genTid(),type:'DI CHUYỂN',labelId:keep.id,uid:keep.uid,bravoCode:keep.bravoCode,productName:keep.productName,unit:keep.unit,qty:totalRem,warehouse:keep.warehouse||'',fromLoc:keep.location,toLoc:keep.location,note:'🧹 Dọn dẹp: gộp '+g.length+' dòng trùng do lỗi hệ thống cũ thành 1 dòng',datetime:dt,date:today()});
+    mergedCount++;
+  });
+  DB.sL(L);DB.sT(T);
+  closeMo('mo-dupclean');
+  document.getElementById('dupclean-result').innerHTML='<div class="alert as" style="font-size:12px;">✅ Đã gộp xong '+mergedCount+' nhóm tem trùng do lỗi cũ.</div>';
+  _dupCleanGroups=null;
+  renderInv();renderDash();
+}
+
+// ══════ RECEIVE LOOKUP ══════
 function recvLookup(){
   const q=gv('recv-lookup').trim().toLowerCase();const el=document.getElementById('recv-lookup-result');
   if(!q){el.innerHTML='';return;}
@@ -2194,24 +2389,30 @@ function isLookup(){
 }
 
 // ══════════ INVENTORY: xem lịch sử từ nút 🔍 (theo tem) và từ summary (theo mã) ══════════
-function showDet(id){
-  const l=DB.gL().find(x=>x.id===id);if(!l)return;
-  const txns=DB.gT().filter(t=>t.labelId===id);detailLbl=l;
+function showDet(uid){
+  const L=DB.gL();
+  const l=L.find(x=>x.uid===uid);if(!l)return;
+  // Ưu tiên lịch sử GD gắn đúng uid của dòng này; nếu GD cũ chưa có uid (dữ liệu trước khi nâng cấp) thì fallback theo mã tem
+  let txns=DB.gT().filter(t=>t.uid===uid);
+  if(!txns.length)txns=DB.gT().filter(t=>t.labelId===l.id&&!t.uid);
+  detailLbl=l;
   const age=ageDays(l.stockDate||l.receivedDate);const pct=l.qty>0?Math.round((l.remaining/l.qty)*100):0;
-  document.getElementById('lh-title').textContent='📋 Chi tiết tem: '+id;
+  const siblings=L.filter(x=>x.id===l.id&&x.uid!==uid);
+  document.getElementById('lh-title').textContent='📋 Chi tiết tem: '+l.id;
   document.getElementById('lh-body').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:11px;">
       <div><div style="font-size:10px;color:var(--muted);">Mã Bravo</div><div style="font-weight:700;font-size:14px;">${l.bravoCode}</div></div>
       <div><div style="font-size:10px;color:var(--muted);">Mã tem</div><div class="mono">${l.id}</div></div>
       <div><div style="font-size:10px;color:var(--muted);">Sản phẩm</div><div style="font-weight:600;">${l.productName}</div></div>
-      <div><div style="font-size:10px;color:var(--muted);">Kho / Vị trí</div><div><span class="kho-b">${l.warehouse||'—'}</span> <span class="loc-b">📍 ${l.location||'—'}</span></div></div>
+      <div><div style="font-size:10px;color:var(--muted);">Kho / Vị trí (dòng này)</div><div><span class="kho-b">${l.warehouse||'—'}</span> <span class="loc-b">📍 ${l.location||'—'}</span></div></div>
     </div>
+    ${siblings.length?`<div class="alert aw" style="margin-bottom:11px;font-size:11px;">⚠️ Mã tem này còn tồn tại ở ${siblings.length} vị trí khác: ${siblings.map(s=>'📍 '+(s.location||'—')+' (tồn '+s.remaining+' '+s.unit+')').join(', ')}</div>`:''}
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:11px;">
       <div class="sc"><div class="sl2">SL nhập</div><div class="sv" style="font-size:18px;">${l.qty}</div><div class="ss">${l.unit}</div></div>
       <div class="sc"><div class="sl2">SL xuất</div><div class="sv" style="font-size:18px;color:var(--danger)">${l.issued||0}</div><div class="ss">${l.unit}</div></div>
       <div class="sc"><div class="sl2">Tồn còn</div><div class="sv" style="font-size:18px;color:var(--success)">${l.remaining}</div><div class="ss">${l.unit} (${pct}%)</div></div>
     </div>
-    <div style="font-size:11px;font-weight:600;margin-bottom:5px;">📜 Lịch sử giao dịch của tem này:</div>
+    <div style="font-size:11px;font-weight:600;margin-bottom:5px;">📜 Lịch sử giao dịch của dòng tem này:</div>
     ${txns.length===0?'<p style="color:var(--muted);font-size:11px;">Chưa có GD</p>':
       '<div class="tw"><table><thead><tr><th>Thời gian</th><th>Loại</th><th>SL</th><th>Từ</th><th>Đến</th><th>Ghi chú</th></tr></thead><tbody>'+
       txns.map(t=>`<tr><td style="font-size:10px;white-space:nowrap;">${t.datetime}</td><td><span class="badge ${t.type==='NHẬP'?'gs':t.type==='XUẤT'?'gd':'gi'}">${t.type}</span></td><td>${t.qty} ${t.unit||''}</td><td>${t.fromLoc?'<span class="loc-b">📍 '+t.fromLoc+'</span>':'—'}</td><td>${t.toLoc?'<span class="loc-b">📍 '+t.toLoc+'</span>':'—'}</td><td style="font-size:10px;">${t.note||''}</td></tr>`).join('')+
@@ -2279,7 +2480,7 @@ function closePeriod(){
   if(!confirm('🔒 Đóng kỳ kiểm kê "'+sess.name+'"\n\nThao tác này sẽ:\n• Xóa toàn bộ tồn kho hiện tại\n• Thay bằng '+sess.items.length+' dòng dữ liệu kiểm kê\n\nXác nhận?'))return;
   const td=today();
   const newLabels=sess.items.map(it=>({
-    id:genId(),bravoCode:it.bravoCode,productName:it.productName,
+    id:genId(),uid:genUid(),bravoCode:it.bravoCode,productName:it.productName,
     qty:it.actualQty!==undefined?it.actualQty:it.sysQty,
     unit:it.unit,pack:'—',warehouse:it.warehouse||'',note:'KK: '+sess.name,
     printSize:'a5',remaining:it.actualQty!==undefined?it.actualQty:it.sysQty,
@@ -2314,7 +2515,7 @@ function loadDemo(){
   DB.sL([{id:'TEM-DEMO001',bravoCode:'BRV-1001',productName:'Vít M6x20mm Inox 304',qty:500,unit:'Cái',pack:'Thùng',warehouse:'Vật tư',printSize:'a5',note:'',remaining:350,issued:150,location:'A-01-01',status:'ACTIVE',createdAt:'20/05/2026, 08:00',createdDate:'2026-05-20',receivedAt:'20/05/2026, 09:00',receivedDate:'2026-05-20',stockDate:'2026-05-20',updatedAt:'27/05/2026, 14:00'},{id:'TEM-DEMO002',bravoCode:'BRV-2002',productName:'Ốc Vặn M8 Mạ Kẽm',qty:1000,unit:'Cái',pack:'Thùng',warehouse:'Vật tư',printSize:'a5',note:'',remaining:20,issued:980,location:'A-01-02',status:'ACTIVE',createdAt:'15/05/2026, 09:00',createdDate:'2026-05-15',receivedAt:'15/05/2026, 10:00',receivedDate:'2026-05-15',stockDate:'2026-05-15',updatedAt:'27/05/2026, 16:00'},{id:'TEM-DEMO003',bravoCode:'BRV-1001',productName:'Vít M6x20mm Inox 304',qty:500,unit:'Cái',pack:'Thùng',warehouse:'Vật tư',printSize:'a5',note:'Lô mới',remaining:500,issued:0,location:'A-01-03',status:'ACTIVE',createdAt:'25/05/2026, 08:00',createdDate:'2026-05-25',receivedAt:'25/05/2026, 09:00',receivedDate:'2026-05-25',stockDate:'2026-05-25',updatedAt:'25/05/2026'},{id:'TEM-DEMO004',bravoCode:'BRV-3003',productName:'Keo 3M 300ml',qty:24,unit:'Lít',pack:'Thùng',warehouse:'Linh kiện',printSize:'a5',note:'',remaining:24,issued:0,location:'B-02-01',status:'ACTIVE',createdAt:'28/05/2026, 07:30',createdDate:'2026-05-28',receivedAt:'28/05/2026, 08:00',receivedDate:'2026-05-28',stockDate:'2026-05-28',updatedAt:'28/05/2026'},{id:'TEM-DEMO005',bravoCode:'BRV-4004',productName:'Dầu Castrol 5L',qty:10,unit:'Lít',pack:'Thùng',warehouse:'Phôi',printSize:'sq',note:'',remaining:10,issued:0,location:null,status:'PENDING',createdAt:'28/05/2026, 09:00',createdDate:'2026-05-28',updatedAt:'28/05/2026'}]);
   DB.sT([{id:'TXN-001',type:'NHẬP',labelId:'TEM-DEMO002',bravoCode:'BRV-2002',productName:'Ốc Vặn M8 Mạ Kẽm',unit:'Cái',qty:1000,warehouse:'Vật tư',fromLoc:null,toLoc:'A-01-02',note:'Nhập kho',datetime:'15/05/2026, 10:00',date:'2026-05-15'},{id:'TXN-002',type:'NHẬP',labelId:'TEM-DEMO001',bravoCode:'BRV-1001',productName:'Vít M6x20mm Inox 304',unit:'Cái',qty:500,warehouse:'Vật tư',fromLoc:null,toLoc:'A-01-01',note:'Nhập kho',datetime:'20/05/2026, 09:00',date:'2026-05-20'},{id:'TXN-003',type:'XUẤT',labelId:'TEM-DEMO002',bravoCode:'BRV-2002',productName:'Ốc Vặn M8 Mạ Kẽm',unit:'Cái',qty:980,warehouse:'Vật tư',fromLoc:'A-01-02',toLoc:null,note:'SX T5',datetime:'22/05/2026, 10:00',date:'2026-05-22'},{id:'TXN-004',type:'NHẬP',labelId:'TEM-DEMO003',bravoCode:'BRV-1001',productName:'Vít M6x20mm Inox 304',unit:'Cái',qty:500,warehouse:'Vật tư',fromLoc:null,toLoc:'A-01-03',note:'Nhập kho',datetime:'25/05/2026, 09:00',date:'2026-05-25'},{id:'TXN-005',type:'XUẤT',labelId:'TEM-DEMO001',bravoCode:'BRV-1001',productName:'Vít M6x20mm Inox 304',unit:'Cái',qty:150,warehouse:'Vật tư',fromLoc:'A-01-01',toLoc:null,note:'PO-2026-045',datetime:'27/05/2026, 14:00',date:'2026-05-27'}]);
 }
-loadDemo();renderDash();autoFb();setTimeout(checkStorageSize,500);
+loadDemo();migrateLabelUids();renderDash();autoFb();setTimeout(checkStorageSize,500);
 //================================================================================
 // RE-DESIGNED KIỂM KÊ KHO (STOCKTAKE MODULE) LOGIC ENGINE
 //================================================================================
